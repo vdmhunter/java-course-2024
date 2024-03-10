@@ -1,7 +1,7 @@
 package edu.java.scrapper;
 
-import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import liquibase.Contexts;
@@ -42,18 +42,13 @@ public abstract class IntegrationTest {
             var db = DatabaseFactory.getInstance()
                 .findCorrectDatabaseImplementation(new JdbcConnection(connection));
 
-            Path changelogPath = new File("")
-                .toPath()
-                .toAbsolutePath()
-                .getParent()
-                .resolve("migrations");
+            Path migrationsPath = Paths.get("").toAbsolutePath().getParent().resolve("migrations");
 
-            var liquibase =
-                new Liquibase(
-                    "master.xml",
-                    new DirectoryResourceAccessor(changelogPath),
-                    db
-                );
+            var liquibase = new Liquibase(
+                "master.xml",
+                new DirectoryResourceAccessor(migrationsPath),
+                db
+            );
 
             //noinspection deprecation
             liquibase.update(new Contexts(), new LabelExpression());
