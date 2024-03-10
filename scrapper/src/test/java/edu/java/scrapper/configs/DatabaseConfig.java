@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import static edu.java.scrapper.IntegrationTest.POSTGRES;
 
 @Configuration
-public class PostgresConfig {
+public class DatabaseConfig {
     @Bean
     public DataSource getDataSource() {
         return DataSourceBuilder.create()

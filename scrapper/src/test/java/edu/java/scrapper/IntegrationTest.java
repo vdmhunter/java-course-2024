@@ -22,6 +22,7 @@ public abstract class IntegrationTest {
     public static PostgreSQLContainer<?> POSTGRES;
 
     static {
+        //noinspection resource
         POSTGRES = new PostgreSQLContainer<>("postgres:15")
             .withDatabaseName("scrapper")
             .withUsername("postgres")
@@ -31,14 +32,14 @@ public abstract class IntegrationTest {
         runMigrations(POSTGRES);
     }
 
-    private static void runMigrations(JdbcDatabaseContainer<?> c) {
-        try (Connection connection = DriverManager.getConnection(
-            c.getJdbcUrl(),
-            c.getUsername(),
-            c.getPassword()
-        )
+    private static void runMigrations(@NotNull JdbcDatabaseContainer<?> c) {
+        String jdbcUrl = c.getJdbcUrl();
+        String username = c.getUsername();
+        String password = c.getPassword();
+
+        try (Connection connection = DriverManager.getConnection(jdbcUrl, username, password)
         ) {
-            var database = DatabaseFactory.getInstance()
+            var db = DatabaseFactory.getInstance()
                 .findCorrectDatabaseImplementation(new JdbcConnection(connection));
 
             Path changelogPath = new File("")
@@ -51,9 +52,10 @@ public abstract class IntegrationTest {
                 new Liquibase(
                     "master.xml",
                     new DirectoryResourceAccessor(changelogPath),
-                    database
+                    db
                 );
 
+            //noinspection deprecation
             liquibase.update(new Contexts(), new LabelExpression());
         } catch (Exception e) {
             throw new RuntimeException(e);
