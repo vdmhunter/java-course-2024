@@ -2,7 +2,7 @@ package edu.java.bot.commands;
 
 import com.pengrad.telegrambot.model.Update;
 
-public interface Command {
+public interface TelegramCommand {
     String command();
 
     String description();

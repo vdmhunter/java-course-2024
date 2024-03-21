@@ -5,27 +5,27 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 public abstract class LinkValidator {
-    private LinkValidator next;
+    private LinkValidator nextValidator;
 
     @Contract("_, _ -> param1")
-    public static LinkValidator link(LinkValidator first, LinkValidator @NotNull... validators) {
-        LinkValidator head = first;
+    public static LinkValidator chainValidators(LinkValidator first, LinkValidator @NotNull... validators) {
+        LinkValidator headValidator = first;
 
         for (LinkValidator nextValidator : validators) {
-            head.next = nextValidator;
-            head = nextValidator;
+            headValidator.nextValidator = nextValidator;
+            headValidator = nextValidator;
         }
 
         return first;
     }
 
-    public final boolean isValid(@NotNull URI uri) {
+    public final boolean isLinkValid(@NotNull URI uri) {
         if (uri.getHost().equals(getHostName())) {
             return true;
         }
 
-        if (next != null) {
-            return next.isValid(uri);
+        if (nextValidator != null) {
+            return nextValidator.isLinkValid(uri);
         }
 
         return false;

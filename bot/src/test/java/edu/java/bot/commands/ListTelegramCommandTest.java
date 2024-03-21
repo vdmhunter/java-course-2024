@@ -21,15 +21,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest(classes = {BotApplication.class})
-class TrackTest {
+class ListTelegramCommandTest {
     static final long CHAT_ID = 1L;
 
-    Command trackCommand;
+    TelegramCommand listTelegramCommand;
     UserService userService;
 
-    @Autowired
-    TrackTest(Command trackCommand, UserService userService) {
-        this.trackCommand = trackCommand;
+    @Autowired ListTelegramCommandTest(TelegramCommand listTelegramCommand, UserService userService) {
+        this.listTelegramCommand = listTelegramCommand;
         this.userService = userService;
     }
 
@@ -37,7 +36,7 @@ class TrackTest {
     Update update;
 
     @BeforeEach
-    void setUpMock() {
+    void setUp() {
         Message messageMock = mock(Message.class);
         Chat chatMock = mock(Chat.class);
 
@@ -49,40 +48,50 @@ class TrackTest {
     }
 
     @AfterEach
-    void clearDatabase() {
+    void tearDown() {
         userService.clear();
     }
 
-    @SuppressWarnings("OptionalGetWithoutIsPresent")
     @Test
-    @DisplayName("Change of state")
-    void waitingLinkForTrackingSessionState() {
+    @DisplayName("The list of tracked links is empty")
+    void emptyLinkList() {
         // Arrange
         registerUser();
-        String expected = TrackCommand.TRACK_MSG;
-        SessionState expectedSessionState = SessionState.AWAITING_TRACKING_LINK;
+        String expected = ListTelegramCommand.EMPTY_LIST_MSG;
 
         // Act
-        String actual = trackCommand.handle(update);
+        String actual = listTelegramCommand.handle(update);
 
         // Assert
-        assertThat(userService.findById(CHAT_ID)).isPresent();
         assertThat(actual).isEqualTo(expected);
-        assertThat(userService.findById(CHAT_ID).get().getState()).isEqualTo(expectedSessionState);
+    }
+
+    @Test
+    @DisplayName("Non-empty list of tracked references")
+    void nonEmptyLinkList() {
+        // Arrange
+        String link = "https://github.com/";
+        registerUser(List.of(URI.create(link)));
+        String excepted = ListTelegramCommand.LIST_MSG + link + System.lineSeparator();
+
+        // Act
+        String actual = listTelegramCommand.handle(update);
+
+        // Assert
+        assertThat(actual).isEqualTo(excepted);
     }
 
     @Test
     @DisplayName("The user has not been registered yet")
     void unknownUser() {
         // Arrange
-        String expected = TrackCommand.UNKNOWN_USER_MSG;
+        String excepted = ListTelegramCommand.UNKNOWN_USER_MSG;
 
         // Act
-        String actual = trackCommand.handle(update);
+        String actual = listTelegramCommand.handle(update);
 
         // Assert
-        assertThat(userService.findById(CHAT_ID)).isEmpty();
-        assertThat(actual).isEqualTo(expected);
+        assertThat(actual).isEqualTo(excepted);
     }
 
     private void registerUser() {

@@ -21,14 +21,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest(classes = {BotApplication.class})
-class UnTrackTest {
+class UnTrackTelegramCommandTest {
     static final long CHAT_ID = 1L;
 
-    Command unTrackCommand;
+    TelegramCommand unTrackTelegramCommand;
     UserService userService;
 
-    @Autowired UnTrackTest(Command unTrackCommand, UserService userService) {
-        this.unTrackCommand = unTrackCommand;
+    @Autowired UnTrackTelegramCommandTest(TelegramCommand unTrackTelegramCommand, UserService userService) {
+        this.unTrackTelegramCommand = unTrackTelegramCommand;
         this.userService = userService;
     }
 
@@ -36,7 +36,7 @@ class UnTrackTest {
     Update update;
 
     @BeforeEach
-    void setUpMock() {
+    void setUp() {
         Message messageMock = mock(Message.class);
         Chat chatMock = mock(Chat.class);
 
@@ -48,7 +48,7 @@ class UnTrackTest {
     }
 
     @AfterEach
-    void clearDatabase() {
+    void tearDown() {
         userService.clear();
     }
 
@@ -58,11 +58,11 @@ class UnTrackTest {
     void emptyLinkList() {
         // Arrange
         registerUser();
-        String expectedText = UnTrackCommand.EMPTY_LIST_MSG;
+        String expectedText = UnTrackTelegramCommand.EMPTY_LIST_MSG;
         SessionState expectedSessionState = SessionState.DEFAULT;
 
         // Act
-        String actualText = unTrackCommand.handle(update);
+        String actualText = unTrackTelegramCommand.handle(update);
 
         // Assert
         assertThat(userService.findById(CHAT_ID)).isPresent();
@@ -76,11 +76,11 @@ class UnTrackTest {
     void waitingLinkForUnTrackingSessionState() {
         // Arrange
         registerUser(List.of(URI.create("https://github.com/")));
-        String expected = UnTrackCommand.UNTRACK_MSG;
+        String expected = UnTrackTelegramCommand.UNTRACK_MSG;
         SessionState expectedSessionState = SessionState.AWAITING_UNTRACKING_LINK;
 
         // Act
-        String actual = unTrackCommand.handle(update);
+        String actual = unTrackTelegramCommand.handle(update);
 
         // Assert
         assertThat(userService.findById(CHAT_ID)).isPresent();
@@ -92,10 +92,10 @@ class UnTrackTest {
     @DisplayName("The user has not been registered yet")
     void unknownUser() {
         // Arrange
-        String expected = UnTrackCommand.UNKNOWN_USER_MSG;
+        String expected = UnTrackTelegramCommand.UNKNOWN_USER_MSG;
 
         // Act
-        String actual = unTrackCommand.handle(update);
+        String actual = unTrackTelegramCommand.handle(update);
 
         // Assert
         assertThat(userService.findById(CHAT_ID)).isEmpty();

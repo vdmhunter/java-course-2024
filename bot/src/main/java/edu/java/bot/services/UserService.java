@@ -84,6 +84,7 @@ public class UserService {
     private void updateLinks(@NotNull User user, List<URI> links) {
         user.setLinks(links);
         user.setState(SessionState.DEFAULT);
+
         addUser(user);
     }
 }

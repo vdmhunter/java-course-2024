@@ -17,15 +17,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest(classes = {BotApplication.class})
-class HelpTest {
+class StartTelegramCommandTest {
     static final long CHAT_ID = 1L;
 
-    Command helpCommand;
+    TelegramCommand startTelegramCommand;
     UserService userService;
 
-    @Autowired
-    HelpTest(Command helpCommand, UserService userService) {
-        this.helpCommand = helpCommand;
+    @Autowired StartTelegramCommandTest(TelegramCommand startTelegramCommand, UserService userService) {
+        this.startTelegramCommand = startTelegramCommand;
         this.userService = userService;
     }
 
@@ -33,7 +32,7 @@ class HelpTest {
     Update update;
 
     @BeforeEach
-    void setUpMock() {
+    void setUp() {
         Message messageMock = mock(Message.class);
         Chat chatMock = mock(Chat.class);
 
@@ -45,25 +44,24 @@ class HelpTest {
     }
 
     @AfterEach
-    void clearDatabase() {
+    void tearDown() {
         userService.clear();
     }
 
-    @SuppressWarnings("SpellCheckingInspection")
     @Test
-    @DisplayName("Help display")
-    void help() {
+    @DisplayName("User registration, then re-registration")
+    void registerUserTwice() {
         // Arrange
-        String expected = HelpCommand.HELP_MSG
-            + "/start — Register" + System.lineSeparator()
-            + "/track — Start tracking the link" + System.lineSeparator()
-            + "/untrack — Stop tracking the link" + System.lineSeparator()
-            + "/list — Show list of tracked links" + System.lineSeparator();
+        String expected1 = StartTelegramCommand.SUCCESSFUL_REGISTRATION_MSG;
+        String expected2 = StartTelegramCommand.ALREADY_REGISTERED_MSG;
 
         // Act
-        String actual = helpCommand.handle(update);
+        String actual1 = startTelegramCommand.handle(update);
+        String actual2 = startTelegramCommand.handle(update);
 
         // Assert
-        assertThat(actual).isEqualTo(expected);
+        assertThat(userService.findById(CHAT_ID)).isPresent();
+        assertThat(actual1).isEqualTo(expected1);
+        assertThat(actual2).isEqualTo(expected2);
     }
 }

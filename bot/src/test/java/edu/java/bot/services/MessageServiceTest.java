@@ -31,14 +31,15 @@ class MessageServiceTest {
     UserService userService;
     MessageService messageService;
 
-    @Autowired MessageServiceTest(UserService userService, MessageService messageService) {
+    @Autowired
+    MessageServiceTest(UserService userService, MessageService messageService) {
         this.userService = userService;
         this.messageService = messageService;
     }
 
     private static final long CHAT_ID = 1L;
 
-    private void setUpMock(String text) {
+    private void setUp(String text) {
         Message messageMock = mock(Message.class);
         Chat chatMock = mock(Chat.class);
 
@@ -53,27 +54,51 @@ class MessageServiceTest {
     }
 
     @AfterEach
-    void clearDatabase() {
+    void tearDown() {
         userService.clear();
     }
 
     @ParameterizedTest
-    @MethodSource("notRegisteredUserCommands")
-    @DisplayName("User not registered, attempt to enter incorrect commands")
-    void unknownUser(String text, String excepted) {
+    @MethodSource("commandsOfRegisteredUser")
+    @DisplayName("User is registered, attempting to enter commands")
+    void registeredUser(List<URI> links, SessionState sessionState, String text, String excepted) {
         // Arrange
-        setUpMock(text);
+        setUp(text);
+        registerUser(links, sessionState);
 
         // Act
-        String actual = messageService.createResponseText(update);
+        String actual = messageService.generateResponseText(update);
 
         // Assert
         assertThat(actual).isEqualTo(excepted);
     }
 
-    private @NotNull Stream<Arguments> registeredUserCommands() {
+    @ParameterizedTest
+    @MethodSource("commandsOfNotRegisteredUser")
+    @DisplayName("User is not registered, attempting to enter commands")
+    void notRegisteredUser(String text, String excepted) {
+        // Arrange
+        setUp(text);
+
+        // Act
+        String actual = messageService.generateResponseText(update);
+
+        // Assert
+        assertThat(actual).isEqualTo(excepted);
+    }
+
+    private void registerUser(List<URI> links, SessionState sessionState) {
+        userService.addUser(new User(CHAT_ID, links, sessionState));
+    }
+
+    private @NotNull Stream<Arguments> commandsOfRegisteredUser() {
         return Stream.of(
-            Arguments.of(List.of(), SessionState.DEFAULT, "/bla", MessageService.INVALID_COMMAND_MSG),
+            Arguments.of(
+                List.of(),
+                SessionState.DEFAULT,
+                "/bla",
+                MessageService.INVALID_COMMAND_MSG
+            ),
             Arguments.of(
                 List.of(),
                 SessionState.AWAITING_TRACKING_LINK,
@@ -113,26 +138,7 @@ class MessageServiceTest {
         );
     }
 
-    @ParameterizedTest
-    @MethodSource("registeredUserCommands")
-    @DisplayName("User registered, attempting to enter incorrect commands")
-    void registeredUser(List<URI> links, SessionState sessionState, String text, String excepted) {
-        // Arrange
-        setUpMock(text);
-        registerUser(links, sessionState);
-
-        // Act
-        String actual = messageService.createResponseText(update);
-
-        // Assert
-        assertThat(actual).isEqualTo(excepted);
-    }
-
-    private void registerUser(List<URI> links, SessionState sessionState) {
-        userService.addUser(new User(CHAT_ID, links, sessionState));
-    }
-
-    private @NotNull Stream<Arguments> notRegisteredUserCommands() {
+    private @NotNull Stream<Arguments> commandsOfNotRegisteredUser() {
         return Stream.of(
             Arguments.of("/bla", MessageService.UNKNOWN_USER_MSG),
             Arguments.of("set of words", MessageService.UNKNOWN_USER_MSG)

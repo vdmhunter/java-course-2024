@@ -17,14 +17,15 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest(classes = {BotApplication.class})
-class StartTest {
+class HelpTelegramCommandTest {
     static final long CHAT_ID = 1L;
+    static final String LINE_SEPARATOR = System.lineSeparator();
 
-    Command startCommand;
+    TelegramCommand helpTelegramCommand;
     UserService userService;
 
-    @Autowired StartTest(Command startCommand, UserService userService) {
-        this.startCommand = startCommand;
+    @Autowired HelpTelegramCommandTest(TelegramCommand helpTelegramCommand, UserService userService) {
+        this.helpTelegramCommand = helpTelegramCommand;
         this.userService = userService;
     }
 
@@ -32,7 +33,7 @@ class StartTest {
     Update update;
 
     @BeforeEach
-    void setUpMock() {
+    void setUp() {
         Message messageMock = mock(Message.class);
         Chat chatMock = mock(Chat.class);
 
@@ -44,24 +45,25 @@ class StartTest {
     }
 
     @AfterEach
-    void clearDatabase() {
+    void tearDown() {
         userService.clear();
     }
 
+    @SuppressWarnings("SpellCheckingInspection")
     @Test
-    @DisplayName("User registration, then re-registration")
-    void registerUserTwice() {
+    @DisplayName("Help display")
+    void help() {
         // Arrange
-        String expected1 = StartCommand.SUCCESSFUL_REGISTRATION_MSG;
-        String expected2 = StartCommand.ALREADY_REGISTERED_MSG;
+        String expected = HelpTelegramCommand.HELP_MSG
+            + "/start — Register" + LINE_SEPARATOR
+            + "/track — Start tracking the link" + LINE_SEPARATOR
+            + "/untrack — Stop tracking the link" + LINE_SEPARATOR
+            + "/list — Show list of tracked links" + LINE_SEPARATOR;
 
         // Act
-        String actual1 = startCommand.handle(update);
-        String actual2 = startCommand.handle(update);
+        String actual = helpTelegramCommand.handle(update);
 
         // Assert
-        assertThat(userService.findById(CHAT_ID)).isPresent();
-        assertThat(actual1).isEqualTo(expected1);
-        assertThat(actual2).isEqualTo(expected2);
+        assertThat(actual).isEqualTo(expected);
     }
 }

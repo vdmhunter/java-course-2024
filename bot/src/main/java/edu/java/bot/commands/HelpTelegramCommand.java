@@ -8,10 +8,11 @@ import org.springframework.stereotype.Component;
 
 @Component
 @AllArgsConstructor
-public class HelpCommand implements Command {
-    private final List<Command> commands;
-    static final String HELP_MSG = "All commands:" + System.lineSeparator();
-    static final String COMMAND_DESC_MSG = "%s — %s" + System.lineSeparator();
+public class HelpTelegramCommand implements TelegramCommand {
+    private final List<TelegramCommand> telegramCommands;
+    static final String LINE_SEPARATOR = System.lineSeparator();
+    static final String HELP_MSG = "All commands:" + LINE_SEPARATOR;
+    static final String COMMAND_DESC_MSG = "%s — %s" + LINE_SEPARATOR;
 
     @Override
     public String command() {
@@ -20,7 +21,7 @@ public class HelpCommand implements Command {
 
     @Override
     public String description() {
-        return "Show command list";
+        return "Show list of commands";
     }
 
     @Override
@@ -29,16 +30,16 @@ public class HelpCommand implements Command {
     }
 
     private @NotNull String generateMessage() {
-        var text = new StringBuilder();
-        text.append(HELP_MSG);
+        var sb = new StringBuilder();
+        sb.append(HELP_MSG);
 
-        commands.forEach(command ->
-            text.append(
+        telegramCommands.forEach(command ->
+            sb.append(
                 COMMAND_DESC_MSG.formatted(
                     command.command(), command.description()
                 ))
         );
 
-        return text.toString();
+        return sb.toString();
     }
 }

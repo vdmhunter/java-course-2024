@@ -9,10 +9,20 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class LinkValidatorConfig {
     @Bean
-    public LinkValidator linkValidator() {
-        return LinkValidator.link(
-            new GitHubLinkValidator(),
-            new StackOverflowLinkValidator()
-        );
+    public GitHubLinkValidator getGitHubLinkValidator() {
+        return new GitHubLinkValidator();
+    }
+
+    @Bean
+    public StackOverflowLinkValidator getStackOverflowLinkValidator() {
+        return new StackOverflowLinkValidator();
+    }
+
+    @Bean
+    public LinkValidator linkValidator(
+        GitHubLinkValidator gitHubLinkValidator,
+        StackOverflowLinkValidator stackOverflowLinkValidator
+    ) {
+        return LinkValidator.chainValidators(gitHubLinkValidator, stackOverflowLinkValidator);
     }
 }
